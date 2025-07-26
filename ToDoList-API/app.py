@@ -1,33 +1,32 @@
+'''
+Small Project #1
+
+Skills and Tech Used:
+- REST API Design
+- JSON
+- Basic Authentication middleware
+- Flask
+- Python Sqlite database
+- Python
+
+Objectives:
+Main focus: CRUD operations. To Do List API with authentication logic, 
+ability to create both users and tasks + update them + delete them and be 
+able to retrieve a list of tasks and filter them by status and get details of
+each one
+
+Project Idea from: https://roadmap.sh/backend/project-ideas#2-to-do-list-api
+
+Requirements to Run:
+- Python 3.8
+- pip install -r requirements.txt
+'''
+import helpers
 from flask import Flask
-import sqlite3
 
 # ----------------------
 # Initialize Application
 # ----------------------
 app = Flask(__name__)
-
-
-conn = sqlite3.connect('todo-database.db')
-conn.row_factory = sqlite3.Row
-cur = conn.cursor()
-
-cur.execute('''
-            CREATE TABLE IF NOT EXISTS Users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL,
-            password TEXT NOT NULL
-            )
-            ''')
-cur.execute ('''
-            CREATE TABLE IF NOT EXISTS Tasks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            title TEXT NOT NULL,
-            description TEXT NOT NULL,
-            status TEXT NOT NULL,
-            created_at TEXT NOT NULL
-            FOREIGN KEY (user_id) REFERENCES Users(id)
-            )
-            ''')
-
-conn.commit()
+conn, cur = helpers.init_db()
+helpers.create_tables(cur, conn)
