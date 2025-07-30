@@ -1,0 +1,7 @@
+<!doctype html><title>{{ title }}</title>
+{% if session.username %}
+  <p>Logged in as <strong>{{ session.username }}</strong>  
+     [<a href="{{ url_for('logout') }}">logout</a>]</p>
+{% endif %}
+<hr>
+{% block body %}{% endblock %}
