@@ -112,39 +112,30 @@ def register():
     user_id = cur.lastrowid
     return jsonify({"id": user_id, "username": username}), 201
 
-@app.route('/login', methods=['POST'])
-def login():
+@auth.verify_password
+def verify_password(username, password):
     """
-    Login a user
-    Input JSON: {
-        "username": "John",
-        "password": "secret"
-    }
+    Verify User Credentials
 
-    Output JSON: {
-        "message": "Login successful"
-    }
+    Input: username, password
+    Output: True if credentials are valid, False otherwise
     """
 
-    # Read JSON body of incoming request
-    data: dict = request.get_json() or {}
-
-    # Extract username and password from the data
-    username: str = str(data.get('username', "")).strip()
-    password: str = str(data.get('password', "")).strip()
-
+    # Check if username and password are provided
     if not username or not password:
-        return jsonify({"error": "Username and password are required"}), 400
+        return False
     
-    # Check if the user exists and the password is correct
+    # Query the database for the user
     cur.execute("SELECT * FROM Users WHERE username = ?", (username,))
     user = cur.fetchone()
-    if user is None or not check_password_hash(user['password'], password):
-        return jsonify({"error": "Invalid credentials"}), 401
     
-    # If successful, return a success message
-    return jsonify({"message": "Login successful"}), 200
-
+    # If user exists and password matches, return True
+    if user and check_password_hash(user['password'], password):
+        # Set the current user in Flask's context
+        Flask.current_user = user
+        return True
+        
+    return False
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
