@@ -139,7 +139,28 @@ def verify_password(username, password):
 @app.route('/tasks', methods=['GET', 'POST'])
 @auth.login_required
 def tasks():
-    pass
+    """
+    Get or create tasks for the current user
+    """
+    if request.method == 'POST':
+        # Create a new task
+        data = request.get_json()
+        title = data.get('title')
+        description = data.get('description')
+
+        if not title or not description:
+            return jsonify({"error": "Title and description are required"}), 400
+
+        cur.execute("INSERT INTO Tasks (user_id, title, description, status, created_at) VALUES (?, ?, ?, ?, ?)",
+                    (g.current_user['id'], title, description, 'pending', ''))
+        conn.commit()
+        return jsonify({"message": "Task created successfully"}), 201
+
+    else:
+        # Get all tasks for the current user
+        cur.execute("SELECT * FROM Tasks WHERE user_id = ?", (g.current_user['id'],))
+        tasks = cur.fetchall()
+        return jsonify([dict(task) for task in tasks]), 200
 
 
 if __name__ == '__main__':
