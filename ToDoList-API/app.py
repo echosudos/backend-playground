@@ -146,8 +146,14 @@ def login():
     return jsonify({"message": "Login successful"}), 200
 
 
-
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
-    conn.close()  # Close the database connection when the app stops
-    cur.close()  # Close the cursor as well
+
+    # Reset table contents on shutdown
+    cur.execute("DELETE FROM Users")
+    cur.execute("DELETE FROM Tasks")
+    conn.commit()
+
+    # Close Connection with Database
+    conn.close()  
+    cur.close()  
