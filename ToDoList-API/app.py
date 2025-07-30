@@ -26,7 +26,7 @@ References:
 - https://flask.palletsprojects.com/en/stable/quickstart/
 '''
 import sqlite3
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, g
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -132,10 +132,15 @@ def verify_password(username, password):
     # If user exists and password matches, return True
     if user and check_password_hash(user['password'], password):
         # Set the current user in Flask's context
-        Flask.current_user = user
+        g.current_user = user
         return True
-        
     return False
+
+@app.route('/tasks', methods=['GET', 'POST'])
+@auth.login_required
+def tasks():
+    pass
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
