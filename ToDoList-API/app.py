@@ -42,6 +42,11 @@ conn = sqlite3.connect('todo-database.db', check_same_thread=False)
 conn.row_factory = sqlite3.Row
 cur = conn.cursor()
 
+# Reset Table
+cur.execute("DELETE FROM Users")
+cur.execute("DELETE FROM Tasks")
+conn.commit()
+
 cur.execute('''
             CREATE TABLE IF NOT EXISTS Users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -247,12 +252,3 @@ def task(task_id):
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
-
-    # Reset table contents on shutdown
-    cur.execute("DELETE FROM Users")
-    cur.execute("DELETE FROM Tasks")
-    conn.commit()
-
-    # Close Connection with Database
-    conn.close()  
-    cur.close()  
