@@ -24,6 +24,13 @@ Requirements to Run:
 References:
 - https://flask-httpauth.readthedocs.io/en/latest/
 - https://flask.palletsprojects.com/en/stable/quickstart/
+
+
+Things to explore further as of Aug 2, 2025
+- DB connections and threads
+- g
+- abort
+- sqlite3
 '''
 import sqlite3
 from datetime import datetime
