@@ -183,10 +183,67 @@ def tasks():
 @auth.login_required
 def task(task_id):
     """
-    Get, update, or delete a task
+    Get: Return specified task for current user
+    Put: Update fields of the specified task
+    Delete: Delete the specified task
     """
-    pass
+    user_id = g.current_user['id']
 
+    # Get the task
+    cur.execute(
+        "SELECT * FROM Tasks WHERE id =? AND user_id =?",
+        (task_id, user_id)
+    )
+    row = cur.fetchone()
+
+    if not row:
+        abort(404, description="Task not found")
+
+    # Convert row to dict
+    task = dict(row)
+
+    if request.method == 'GET':
+        # Return task as JSON
+        return jsonify(task), 200
+    
+    if request.method == 'PUT':
+        data = request.get_json() or {}
+        # Update task fields
+        title = data.get('title', task['title']).strip()
+        description  = data.get('description', task['description']).strip()
+        status  = data.get('status', task['status']).strip()
+
+        # Update Timestamp
+        now = datetime.now().isoformat()
+
+        # Update task in database
+        cur.execute(
+            """
+            UPDATE Tasks
+            SET title       = ?,
+                description = ?,
+                status      = ?,
+                created_at  = ?
+            WHERE id = ? AND user_id = ?
+            """,
+            (title, description, status, now, task_id, user_id)
+        )
+        conn.commit()
+
+        # Return the updated record in the response
+        task.update({"title": title, "description": desc, "status": stat, "created_at": now})
+        return jsonify(task), 200
+
+    if request.method == 'DELETE':
+        # Remove the task from the database
+        cur.execute(
+            "DELETE FROM Tasks WHERE id = ? AND user_id = ?",
+            (task_id, user_id)
+        )
+        conn.commit()
+
+        # Return success msg
+        return jsonify({"message": "Task deleted successfully"}), 200
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
