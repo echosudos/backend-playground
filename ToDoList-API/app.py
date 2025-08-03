@@ -26,7 +26,8 @@ References:
 - https://flask.palletsprojects.com/en/stable/quickstart/
 '''
 import sqlite3
-from flask import Flask, request, jsonify, g
+from datetime import datetime
+from flask import Flask, request, jsonify, abort, g
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -68,7 +69,7 @@ conn.commit()
 # ----------------------
 @app.route('/')
 def index():
-    return "Welcome to the ToDo List API!"
+    return "Welcome to the ToDo List API!", 200
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -142,25 +143,49 @@ def tasks():
     """
     Get or create tasks for the current user
     """
+    user_id = g.current_user['id'] # Get the current user's ID from the Flask context
+
     if request.method == 'POST':
         # Create a new task
         data = request.get_json()
-        title = data.get('title')
-        description = data.get('description')
+        title = data.get('title', '').strip()
+        description = data.get('description', '').strip()
 
         if not title or not description:
             return jsonify({"error": "Title and description are required"}), 400
 
+        now = datetime.now().isoformat()  # Get current time in ISO format
         cur.execute("INSERT INTO Tasks (user_id, title, description, status, created_at) VALUES (?, ?, ?, ?, ?)",
-                    (g.current_user['id'], title, description, 'pending', ''))
+                    (user_id, title, description, 'pending', now))
         conn.commit()
         return jsonify({"message": "Task created successfully"}), 201
 
+    # ---- Get All Tasks ----
+    # Filtering tasks by Status via Query Parameter
+    status_filter = request.args.get('status')
+    if status_filter:
+        cur.execute(
+            "SELECT * FROM Tasks WHERE user_id = ? AND status = ?",
+            (user_id, status_filter)
+        )
     else:
-        # Get all tasks for the current user
-        cur.execute("SELECT * FROM Tasks WHERE user_id = ?", (g.current_user['id'],))
-        tasks = cur.fetchall()
-        return jsonify([dict(task) for task in tasks]), 200
+        cur.execute(
+            "SELECT * FROM Tasks WHERE user_id = ?",
+            (user_id,)
+        )
+    
+    rows = cur.fetchall()
+
+    tasks = [dict(r) for r in rows]
+    return jsonify(tasks), 200
+
+@app.route('/tasks/<int:task_id>', methods=['GET', 'PUT', 'DELETE'])
+@auth.login_required
+def task(task_id):
+    """
+    Get, update, or delete a task
+    """
+    pass
 
 
 if __name__ == '__main__':
