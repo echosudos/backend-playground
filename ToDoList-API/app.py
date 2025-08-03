@@ -38,7 +38,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 auth = HTTPBasicAuth()
 
-conn = sqlite3.connect('todo-database.db')
+conn = sqlite3.connect('todo-database.db', check_same_thread=False)
 conn.row_factory = sqlite3.Row
 cur = conn.cursor()
 
