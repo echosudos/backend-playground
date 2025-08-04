@@ -33,6 +33,7 @@ app = Flask(__name__)
 conn = sqlite3.connect('articles.db')
 cur = conn.cursor()
 
+# Reset DB
 cur.execute("DELETE FROM Articles")
 cur.commit()
 
@@ -62,7 +63,14 @@ def before_request():
         g.conn = sqlite3.connect('articles.db')
         g.conn.row_factory = sqlite3.Row
 
-
+# ---- Routes ----
+@app.route('/articles', methods=['GET'])
+def get_articles():
+    conn = g.conn
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM Articles")
+    articles = cur.fetchall()
+    return jsonify([dict(article) for article in articles])
 
 
 
