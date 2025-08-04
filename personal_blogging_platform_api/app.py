@@ -47,18 +47,21 @@ cur.execute('''
 conn.commit()
 conn.close()
 
-# ---- Helper Functions ----
-def get_db():
-    if 'db' not in g:
-        g.db = sqlite3.connect('articles.db')
-        #g.db.row_factory = sqlite3.Row
-    return g.db
 
-# ---- Routes ----
+# ---- Pre-Request and Post Reuqest Functions
 @app.teardown_appcontext
 def close_db(error):
-    db = g.pop('db', None)
-    if db is not None:
-        db.close()
+    conn = g.pop('conn', None)
+    if conn is not None:
+        conn.close()
+
+@app.before_request
+def before_request():
+    if 'conn' not in g:
+        g.conn = sqlite3.connect('articles.db')
+        g.conn.row_factory = sqlite3.Row
+
+
+
 
 
