@@ -39,14 +39,17 @@ from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
+
+
+
 # ----------------------
 # Initialize Application
 # ----------------------
 app = Flask(__name__)
 auth = HTTPBasicAuth()
 
-conn = sqlite3.connect('todo-database.db', check_same_thread=False)
-conn.row_factory = sqlite3.Row
+# Init DB connection
+conn = sqlite3.connect('todo-database.db')
 cur = conn.cursor()
 
 # Reset Table
@@ -74,11 +77,25 @@ cur.execute ('''
             ''')
     
 conn.commit()
+conn.close()
 
+# Creates a DB connection and stores it in Flask's context
+def get_db():
+    if 'db' not in g:
+        g.db = sqlite3.connect('todo-database.db')
+        g.db.row_factory = sqlite3.Row
+    return g.db
 
 # ----------------------
 # Routes ~ API Endpoints
 # ----------------------
+# Closes DB connection at the end of each req
+@app.teardown_appcontext
+def close_db(error=None):
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
+
 @app.route('/')
 def index():
     return "Welcome to the ToDo List API!", 200
@@ -97,6 +114,10 @@ def register():
         "username": "John"
     }
     """
+    # Initialize DB connection
+    conn = get_db()  
+    cur = conn.cursor()
+    
     # Read JSON body of incoming request
     # Fallback: Empty Dict
     data: dict = request.get_json() or {}
@@ -133,6 +154,9 @@ def verify_password(username, password):
     Input: username, password
     Output: True if credentials are valid, False otherwise
     """
+    # Initialize DB connection
+    conn = get_db()  
+    cur = conn.cursor()
 
     # Check if username and password are provided
     if not username or not password:
@@ -155,6 +179,10 @@ def tasks():
     """
     Get or create tasks for the current user
     """
+    # Initialize DB connection
+    conn = get_db()  
+    cur = conn.cursor()
+
     user_id = g.current_user['id'] # Get the current user's ID from the Flask context
 
     if request.method == 'POST':
@@ -199,6 +227,10 @@ def task(task_id):
     Put: Update fields of the specified task
     Delete: Delete the specified task
     """
+    # Initialize DB connection
+    conn = get_db()  
+    cur = conn.cursor()
+
     user_id = g.current_user['id']
 
     # Get the task
