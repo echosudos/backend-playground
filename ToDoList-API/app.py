@@ -1,7 +1,7 @@
 '''
 Small Project #1
 
-Skills and Tech Used:
+Skills/Tech/Concepts Explored
 - REST API Design
 - JSON
 - Basic Authentication middleware
@@ -26,8 +26,7 @@ References:
 - https://flask.palletsprojects.com/en/stable/quickstart/
 
 
-Things to explore further as of Aug 2, 2025
-- DB connections and threads
+Things to explore further as of Aug 3, 2025
 - g
 - abort
 - sqlite3
